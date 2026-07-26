@@ -15,12 +15,11 @@ from model_tuner.pickleObjects import dumpObjects
 from core.constants import (
     var_index,
     creat_var,
+    time_var,
+    time_var_corr,  
     creat_var_corr,
     preproc_run_name,
     exp_artifact_name,
-    miss_col_thresh,
-    miss_row_thresh,
-    percent_miss,
 )
 
 # import all user-defined functions and constants
@@ -67,9 +66,15 @@ def main(
     else:
         print(f"Index '{var_index}' already set - skipping.")
 
-    if creat_var in df:
-        df.rename(columns={creat_var: creat_var_corr}, inplace=True)
-        print(f"Renamed column to '{creat_var_corr}'.")
+    ###########################################################################
+    # Step 3. Rename Columns for Consistency
+    ###########################################################################
+    rename_map = {creat_var: creat_var_corr, time_var: time_var_corr}
+    renamed = {k: v for k, v in rename_map.items() if k in df.columns}
+    df.rename(columns=renamed, inplace=True)
+
+    for old, new in renamed.items():
+        print(f"Renamed '{old}' to '{new}'.")
     if stage == "training":
 
         df_object = df.select_dtypes("object")
@@ -218,95 +223,7 @@ def main(
     print()
 
     ############################################################################
-    # Step 8. Handle Missing Data
-    ############################################################################
-
-    # Calculate the percentage of missing values for each column in df_sans_zero
-    # 1. df_sans_zero.isnull().sum() counts the number of missing values in each
-    #    column.
-    # 2. len(df_sans_zero) gives the total number of rows in the DataFrame.
-    # 3. Dividing the number of missing values by the total number of rows gives
-    #    the proportion of missing values.
-    # 4. Multiplying by 100 converts this proportion into a percentage.
-
-    if stage == "training":
-
-        """
-        Process Description: Handling Missing Data in a Dataset
-
-        1. Identifying Missing Data by Column
-
-        The first step in handling missing data involves calculating the
-        percentage of missing values for each column in the dataset. This helps
-        visualize the distribution of missing values and determine a reasonable
-        threshold for column retention.
-        """
-
-        # Compute the percentage of missing values for each column
-        perc_missing_vals_per_col = (
-            df_sans_zero.isnull().sum() / len(df_sans_zero)
-        ) * 100
-
-        # Select columns where less than 60% of the data is missing.
-        """
-        Filtering Columns Based on Missing Data Threshold
-
-        Columns with more than 60% missing values were flagged for potential 
-        removal, while those with a lower percentage were retained for further 
-        analysis.
-
-        After visualizing the missing data distribution, columns where more than 
-        60% of values are missing are removed.
-
-        """
-        perc_below_indiv = perc_missing_vals_per_col[
-            perc_missing_vals_per_col <= miss_col_thresh
-        ].index.tolist()
-
-        # Dump the perc_below_indiv into a pickle file
-        dumpObjects(
-            perc_below_indiv,
-            os.path.join(data_path, "perc_below_indiv.pkl"),
-        )
-
-        mlflow_dumpArtifact(
-            experiment_name=exp_artifact_name,
-            run_name=preproc_run_name,
-            obj_name="perc_below_indiv",
-            obj=perc_below_indiv,
-        )
-
-    if stage == "inference":
-
-        ########################################################################
-        # Load Previously Saved Percentage Below Threshold List
-        ########################################################################
-
-        # load perc_below_indiv
-        perc_below_indiv = mlflow_loadArtifact(
-            experiment_name=exp_artifact_name,
-            run_name=preproc_run_name,
-            obj_name="perc_below_indiv",
-        )
-
-    print(f"Sans Zero 60% Missing Data: {df_sans_zero.shape}")
-
-
-    ############################################################################
-    # Step 9. Calculate Row-wise Missingness Percentage
-    ############################################################################
-    # This step computes the proportion of missing values for each row in the
-    # DataFrame. It helps identify rows with a high level of incompleteness, which
-    # may be useful for filtering, imputation strategies, or downstream analysis.
-    #
-    # A new column is added to `df_sans_zero` where each value represents
-    # the percentage of columns that are missing for that row.
-    ############################################################################
-
-    df_sans_zero[percent_miss] = df_sans_zero.isna().mean(axis=1)
-
-    ############################################################################
-    # Step 10. Save Processed Data
+    # Step 8. Save Processed Data
     ############################################################################
 
     # Save out the dataframe to parquet file
