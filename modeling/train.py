@@ -17,6 +17,9 @@ from core.config import (
     numerical_cols,
     categorical_cols,
 )
+
+from core.constants import target_outcome
+
 from core.functions import (
     clean_feature_selection_params,
     mlflow_log_parameters_model,
@@ -36,9 +39,9 @@ def main(
     # ---- REPLACE DEFAULT PATHS AS APPROPRIATE ---
     model_type: str = "lr",
     pipeline_type: str = "orig",
-    outcome: str = "default_outcome",
+    outcome: str = "outcome",
     features_path: Path = PROCESSED_DATA_DIR / "X.parquet",
-    labels_path: Path = PROCESSED_DATA_DIR / "y_income.parquet",
+    labels_path: Path = PROCESSED_DATA_DIR / "y.parquet",
     scoring: str = "average_precision",
     pretrained: int = 0,
     # -----------------------------------------
@@ -50,7 +53,7 @@ def main(
 
     X = pd.read_parquet(features_path)  # read in X
     y = pd.read_parquet(labels_path)  # read in y
-    y = y.squeeze()  # coerce into a series
+    y = y[target_outcome[0]].squeeze()  # coerce into a series
 
     ################################################################################
     # Step 4. Retrieve Model and Pipeline Configurations
@@ -129,7 +132,7 @@ def main(
             n_iter=n_iter,
             scoring=[scoring],
             random_state=rstate,
-            stratify_cols=["race"],
+            stratify_cols=["sex"],
             stratify_y=True,
             boost_early=early_stop,
             imbalance_sampler=sampler,
@@ -148,6 +151,7 @@ def main(
 
     X_train, y_train = model.get_train_data(X, y)
     X_valid, y_valid = model.get_valid_data(X, y)
+    X_test, y_test = model.get_test_data(X, y)
 
     ################################################################################
     # Step 10. Train the Model
@@ -189,9 +193,18 @@ def main(
     ################################################################################
 
     # see the results printed to the terminal for reference
+    print(f"\n{'=' * 60}\nValidation Results\n{'=' * 60}")
     model.return_metrics(
         X=X_valid,
         y=y_valid,
+        optimal_threshold=True,
+        print_threshold=True,
+        model_metrics=True,
+    )
+    print(f"\n{'=' * 60}\nTest Results\n{'=' * 60}")
+    model.return_metrics(
+        X=X_test,
+        y=y_test,
         optimal_threshold=True,
         print_threshold=True,
         model_metrics=True,
