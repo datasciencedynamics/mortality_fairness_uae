@@ -5,17 +5,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 from loguru import logger
 
-from sklearn.preprocessing import (
-    StandardScaler,
-    OneHotEncoder,
-    FunctionTransformer,
-)
+from sklearn.preprocessing import StandardScaler
 from sklearn.compose import ColumnTransformer
 
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from imblearn.over_sampling import SMOTE
-from sklearn.feature_selection import RFE
 from imblearn.under_sampling import RandomUnderSampler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
@@ -64,23 +59,16 @@ sampler_definitions = {
     "RandomUnderSampler": RandomUnderSampler(random_state=rstate),
 }
 
-rfe_estimator = LogisticRegression(
-    max_iter=100,
-    n_jobs=-2,
-)
-
-# Remove 10% of features per iteration
-rfe = RFE(
-    estimator=rfe_estimator,
-    step=0.1,
-)
-
 
 ################################################################################
 ############################ Column Definitions ################################
 ################################################################################
 
-categorical_cols = ["sex"]
+# All features in this cohort are numeric. `sex` is already 0/1 coded, so
+# one-hot encoding it would produce two perfectly collinear indicators and
+# forces an int64 block through a string-fill imputer, which SimpleImputer
+# rejects. Treat it as numeric and let StandardScaler pass it through.
+categorical_cols = []
 
 # Load feature column names from Mlflow
 try:
@@ -107,22 +95,6 @@ numerical_cols = [
 ############################### Transformers ###################################
 ################################################################################
 
-
-def as_object(X):
-    """
-    Cast a block of columns to object dtype.
-
-    Integer-coded categoricals (e.g., sex stored as int64) cannot accept a
-    string fill_value in SimpleImputer, since numpy refuses to cast str into
-    an int array. Casting to object first makes fill_value="missing" valid
-    and leaves any NaNs intact for the imputer to handle.
-
-    Defined at module level rather than as a lambda so the fitted pipeline
-    stays picklable for MLflow artifact logging.
-    """
-    return X.astype(object)
-
-
 # Impute first, then scale. Scaling before imputation lets NaNs pass through
 # untouched and makes the fill value dependent on transformer ordering.
 numerical_transformer = Pipeline(
@@ -132,22 +104,9 @@ numerical_transformer = Pipeline(
     ]
 )
 
-categorical_transformer = Pipeline(
-    steps=[
-        (
-            "to_object",
-            FunctionTransformer(as_object, feature_names_out="one-to-one"),
-        ),
-        ("imputer", SimpleImputer(strategy="constant", fill_value="missing")),
-        ("encoder", OneHotEncoder(handle_unknown="ignore")),
-    ]
-)
-
-# Create the ColumnTransformer with passthrough
 preprocessor = ColumnTransformer(
     transformers=[
         ("num", numerical_transformer, numerical_cols),
-        ("cat", categorical_transformer, categorical_cols),
     ],
     # remainder="passthrough",
     # prevents prepending transformer names (e.g., 'remainder_') to output
@@ -159,11 +118,6 @@ preprocessor = ColumnTransformer(
 ################################ Pipelines #####################################
 ################################################################################
 
-pipeline_scale_imp_rfe = [
-    ("Preprocessor", preprocessor),
-    ("RFE", rfe),
-]
-
 pipeline_scale_imp = [
     ("Preprocessor", preprocessor),
 ]
@@ -172,54 +126,19 @@ pipelines = {
     "orig": {
         "pipeline": pipeline_scale_imp,
         "sampler": None,
-        "feature_selection": False,  # No feature selection for orig
+        "feature_selection": False,
     },
     "smote": {
         "pipeline": pipeline_scale_imp,
         "sampler": SMOTE(random_state=rstate),
-        "feature_selection": False,  # No feature selection for smote
+        "feature_selection": False,
     },
     "under": {
         "pipeline": pipeline_scale_imp,
         "sampler": RandomUnderSampler(random_state=rstate),
-        "feature_selection": False,  # No feature selection for under
-    },
-    "orig_rfe": {
-        "pipeline": pipeline_scale_imp_rfe,
-        "sampler": None,
-        "feature_selection": True,  # Feature selection (RFE) for orig_rfe
-    },
-    "smote_rfe": {
-        "pipeline": pipeline_scale_imp_rfe,
-        "sampler": SMOTE(random_state=rstate),
-        "feature_selection": True,  # Feature selection (RFE) for smote_rfe
-    },
-    "under_rfe": {
-        "pipeline": pipeline_scale_imp_rfe,
-        "sampler": RandomUnderSampler(random_state=rstate),
-        "feature_selection": True,  # Feature selection (RFE) for under_rfe
+        "feature_selection": False,
     },
 }
-
-# RFE key present in every grid below. Pipelines without an RFE step should
-# have it stripped before being handed to model_tuner.
-RFE_PARAM_KEY = "feature_selection_RFE__n_features_to_select"
-
-
-def strip_rfe_params(tuned_parameters):
-    """
-    Return a copy of a tuned_parameters list with the RFE key removed.
-
-    Use in train.py when the selected pipeline has feature_selection=False:
-
-        params = model_def["tuned_parameters"]
-        if not pipelines[pipe_key]["feature_selection"]:
-            params = strip_rfe_params(params)
-    """
-    return [
-        {k: v for k, v in grid.items() if k != RFE_PARAM_KEY}
-        for grid in tuned_parameters
-    ]
 
 
 ################################################################################
@@ -242,12 +161,10 @@ lr_penalties = ["l2"]
 lr_Cs = np.logspace(-4, 0, 10)
 l1_ratio = np.linspace(0, 1, 10)
 
-# Structure the parameters similarly to the RF template
 tuned_parameters_lr = [
     {
         "lr__penalty": lr_penalties,
         "lr__C": lr_Cs,
-        RFE_PARAM_KEY: [10, 0.1, 0.5, 0.7, 1.0],
         # "lr__l1_ratio": l1_ratio,
     }
 ]
@@ -286,7 +203,6 @@ rf_parameters = [
         "rf__n_estimators": rf_n_estimators,
         "rf__max_depth": rf_max_depths,
         "rf__criterion": rf_criterions,
-        RFE_PARAM_KEY: [10, 0.1, 0.5, 0.7, 1.0],
     }
 ]
 
@@ -346,7 +262,6 @@ xgb_parameters = [
         "xgb__eval_metric": xgb_eval_metric,
         "xgb__early_stopping_rounds": xgb_early_stopping_rounds,
         "xgb__verbose": xgb_verbose,
-        RFE_PARAM_KEY: [10, 0.1, 0.5, 0.7, 1.0],
     }
 ]
 
@@ -380,7 +295,6 @@ cat_n_estimators = [10000]  # Number of trees
 cat_early_stopping_rounds = [3]  # Early stopping rounds
 cat_random_strengths = [1, 10]  # Random strength for feature randomness
 cat_verbose = [0]  # Verbosity level
-cat_n_features_to_select = [10, 0.1, 0.5, 0.7, 1.0]  # Features for RFE
 
 # Combining the hyperparameters in a dictionary
 cat_parameters = [
@@ -393,7 +307,6 @@ cat_parameters = [
         "cat__early_stopping_rounds": cat_early_stopping_rounds,
         "cat__random_strength": cat_random_strengths,
         "cat__verbose": cat_verbose,
-        RFE_PARAM_KEY: cat_n_features_to_select,
     }
 ]
 
