@@ -8,12 +8,14 @@ import pandas as pd
 # import pickling scripts
 from model_tuner.pickleObjects import dumpObjects
 
-sys.path.insert(0, "core")
+# sys.path.insert(0, "core")
 
 ################################################################################
 
 from core.constants import (
     var_index,
+    creat_var,
+    creat_var_corr,
     preproc_run_name,
     exp_artifact_name,
     miss_col_thresh,
@@ -33,7 +35,7 @@ app = typer.Typer()
 
 @app.command()
 def main(
-    input_data_file: str = "./data/raw/df.parquet",
+    input_data_file: str = "./data/processed/df.parquet",
     output_data_file: str = "./data/processed/df_sans_zero_missing.parquet",
     stage: str = "training",
     data_path: str = "./data/processed",
@@ -65,6 +67,9 @@ def main(
     else:
         print(f"Index '{var_index}' already set - skipping.")
 
+    if creat_var in df:
+        df.rename(columns={creat_var: creat_var_corr}, inplace=True)
+        print(f"Renamed column to '{creat_var_corr}'.")
     if stage == "training":
 
         df_object = df.select_dtypes("object")
@@ -137,62 +142,9 @@ def main(
     # Convert possible numeric columns to actual numeric types
     df = df.apply(lambda x: safe_to_numeric(x))
 
-    ############################################################################
-    # Step 5. Process Additional Feature(s) (e.g., marital status)
-    ############################################################################
-    # Identify the top 10 most frequent marital status categories and retain only
-    # these. Less common categories are replaced with a generic 'other' label to
-    # maintain a controlled feature space and avoid overfitting due to rare
-    # categories.
-    ############################################################################
-
-    if stage == "training":
-        # Extract marital status feature
-        marital_status = df["marital-status"]
-
-        ############################################################################
-        # Step 6. Log Top 10 Marital Status Categories and Replace Rare Ones
-        ############################################################################
-
-        # Save the list of string columns for consistency across training and
-        # inference. Log the top 10 most frequent marital status values using MLflow.
-        # Replace all other less common values with 'other' to simplify the feature
-        # space and improve generalizability.
-
-        ############################################################################
-
-        # Dump the object into a pickle file
-        dumpObjects(
-            marital_status,
-            os.path.join(data_path, "marital_status.pkl"),
-        )
-
-        mlflow_dumpArtifact(
-            experiment_name=exp_artifact_name,
-            run_name=preproc_run_name,
-            obj_name="marital_status",
-            obj=marital_status,
-        )
-
-    if stage == "inference":
-
-        ########################################################################
-        # Load Previously Saved Object
-        ########################################################################
-        # During training, we identified and stored marital_status.
-        # Now, we reload this to ensure that inference follows the same
-        # preprocessing pipeline as training, maintaining consistency.
-        ########################################################################
-
-        ## Load marital_status from artifacts
-        marital_status = mlflow_loadArtifact(
-            experiment_name=exp_artifact_name,
-            run_name=preproc_run_name,
-            obj_name="marital_status",
-        )
 
     ################################################################################
-    # Step 7. Zero Variance Columns
+    # Step 5. Zero Variance Columns
     ################################################################################
 
     # Select only numeric columns s/t .var() can be applied since you can only
@@ -220,7 +172,7 @@ def main(
         print("*" * 80)
 
         ########################################################################
-        # Step 8. Save and Log Zero Variance Columns List
+        # Step 6. Save and Log Zero Variance Columns List
         ########################################################################
         # Save the list of string columns for consistency across training and
         # inference and log them in MLflow for reproducibility.
@@ -252,7 +204,7 @@ def main(
         )
 
     ########################################################################
-    # Step 9. Remove zero variance cols from main df, and assign to new var
+    # Step 7. Remove zero variance cols from main df, and assign to new var
     # df_sans_zero
     ########################################################################
     df_sans_zero = df.drop(columns=zero_varlist_list)
@@ -266,7 +218,7 @@ def main(
     print()
 
     ############################################################################
-    # Step 10. Handle Missing Data
+    # Step 8. Handle Missing Data
     ############################################################################
 
     # Calculate the percentage of missing values for each column in df_sans_zero
@@ -337,62 +289,11 @@ def main(
             obj_name="perc_below_indiv",
         )
 
-    # Create a new DataFrame including only columns where less than 60% of the
-    # data is missing.
-    df_sans_zero_missing = df_sans_zero.loc[:, perc_below_indiv]
+    print(f"Sans Zero 60% Missing Data: {df_sans_zero.shape}")
 
-    print(f"Sans Zero 60% Missing Data: {df_sans_zero_missing.shape}")
 
     ############################################################################
-    # Step 11. Remove Missingness in Rows
-
-    # Filtering Rows Based on Missing Data and Specific Conditions
-
-    # Once high-missing-value columns are removed, additional filtering is
-    # applied at the row level. The goal is to remove rows that:
-
-    # 1. Have zero recorded values for a critical feature (e.g., capital-gain).
-    # 2. Have a high percentage of missing values across all columns.
-
-    # Rows where capital-gain == 0 and a large proportion of other data
-    # is missing (exceeding a predefined threshold miss_row_thresh) are removed.
-
-    # This step ensures that rows with insufficient data for analysis are
-    # discarded while keeping informative rows.
-
-    ############################################################################
-
-    # This is done only once in production for training
-    # Apply the filtering (removing rows based on conditions)
-
-    if stage == "training":
-
-        # Get the number of rows before applying the filter
-        rows_before = df_sans_zero_missing.shape[0]
-
-        df_sans_zero_missing = df_sans_zero_missing[
-            ~(
-                (df_sans_zero_missing["capital-gain"] == 0)
-                & (
-                    (
-                        df_sans_zero_missing.isnull().sum(axis=1)
-                        / df_sans_zero_missing.shape[1]
-                    )
-                    > miss_row_thresh
-                )
-            )
-        ]
-
-        # Get the number of rows after applying the filter
-        rows_after = df_sans_zero_missing.shape[0]
-
-        # Calculate the number of rows removed
-        rows_removed = rows_before - rows_after
-
-        print(f"Number of rows removed: {rows_removed}")
-
-    ############################################################################
-    # Step 12. Calculate Row-wise Missingness Percentage
+    # Step 9. Calculate Row-wise Missingness Percentage
     ############################################################################
     # This step computes the proportion of missing values for each row in the
     # DataFrame. It helps identify rows with a high level of incompleteness, which
@@ -402,15 +303,15 @@ def main(
     # the percentage of columns that are missing for that row.
     ############################################################################
 
-    df_sans_zero_missing[percent_miss] = df_sans_zero_missing.isna().mean(axis=1)
+    df_sans_zero[percent_miss] = df_sans_zero.isna().mean(axis=1)
 
     ############################################################################
-    # Step 13. Save Processed Data
+    # Step 10. Save Processed Data
     ############################################################################
 
     # Save out the dataframe to parquet file
-    print(df_sans_zero_missing.shape)
-    df_sans_zero_missing.reset_index().to_parquet(output_data_file)
+    print(df_sans_zero.shape)
+    df_sans_zero.reset_index().to_parquet(output_data_file)
 
 
 if __name__ == "__main__":

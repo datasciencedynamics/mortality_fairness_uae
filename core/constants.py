@@ -27,7 +27,9 @@ cat_vars = []
 ########################## Variable/DataFrame Constants ########################
 ################################################################################
 
-var_index = "census_id"  # id index
+var_index = "id"  # id index
+creat_var = "creatnine"
+creat_var_corr = "creatinine"
 age = "age"  # age
 age_bin = ""  # bin of ages for stratification only
 main_df = "df.parquet"  # main dataframe file name
