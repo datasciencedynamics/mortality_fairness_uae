@@ -20,7 +20,7 @@ CSV_BACKUP     ?= --no-csv-backup
 
 # Define variables for looping
 OUTCOMES = outcome	
-PIPELINES = orig smote under orig_rfe smote_rfe under_rfe
+PIPELINES = orig smote under
 # PIPELINES = smote 
 SCORING = average_precision
 PRETRAINED ?= 0  # 0 if you want to train the models, 1 if calibrate pretrained
