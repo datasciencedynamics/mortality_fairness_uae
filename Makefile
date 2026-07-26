@@ -153,6 +153,7 @@ create_folders:
 	mkdir -p data/external data/interim data/processed data/raw data/processed/inference
 	mkdir -p models/results models/eval
 	mkdir -p modeling preprocessing
+	mkdir -p notebooks
 	mkdir -p core
 
 	touch data/interim/.gitkeep
