@@ -193,6 +193,14 @@ def main(
     ################################################################################
 
     # see the results printed to the terminal for reference
+    print(f"\n{'=' * 60}\nTraining Results\n{'=' * 60}")
+    model.return_metrics(
+        X=X_train,
+        y=y_train,
+        optimal_threshold=True,
+        print_threshold=True,
+        model_metrics=True,
+    )
     print(f"\n{'=' * 60}\nValidation Results\n{'=' * 60}")
     model.return_metrics(
         X=X_valid,

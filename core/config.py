@@ -55,8 +55,8 @@ features_path = PROCESSED_DATA_DIR / "X.parquet"
 ################################################################################
 
 rstate = 222  # random state for reproducibility
-threshold_target_metric = "precision"  # target metric for threshold tuning
-target_precision = 0.5  # target precision for threshold optimization
+threshold_target_metric = "youden"  # "precision", "recall", or "youden"
+target_precision = 0.5  # unused when threshold_target_metric == "youden"
 
 sampler_definitions = {
     "None": None,
@@ -266,7 +266,7 @@ lr_definition = {
     "estimator_name": lr_name,
     "tuned_parameters": tuned_parameters_lr,
     "randomized_grid": True,
-    "n_iter": 1,
+    "n_iter": 2,
     "early": False,
 }
 
