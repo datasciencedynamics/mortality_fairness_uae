@@ -250,24 +250,39 @@ train_random_forest:
 		done; \
 	done
 
-train_svm:
+train_xgboost:
 	@echo "Pretrained is set to: $(PRETRAINED)"
 	@for outcome in $(OUTCOMES); do \
 		for pipeline in $(PIPELINES); do \
 			mkdir -p models/results/$$outcome; \
 			"$(PYTHON_INTERPRETER)" $(PROJECT_DIRECTORY)/modeling/train.py \
-				--model-type svm \
+				--model-type xgb \
 				--pipeline-type "$$pipeline" \
-				--features-path ./data/processed/X.parquet \
-				--labels-path ./data/processed/y.parquet \
+				--labels-path ./data/processed/y_$$outcome.parquet \
 				--outcome "$$outcome" \
 				--pretrained "$(PRETRAINED)" \
 				--scoring "$(SCORING)" \
-				2>&1 | tee models/results/$$outcome/svm_$$pipeline$$( [ "$(PRETRAINED)" -eq 1 ] && echo "_prefit" ).txt; \
+				2>&1 | tee models/results/$$outcome/xgb_$$pipeline$$( [ "$(PRETRAINED)" -eq 1 ] && echo "_prefit" ).txt; \
 		done; \
 	done
 
-train_all_models: train_logistic_regression train_random_forest train_svm
+train_catboost:
+	@echo "Pretrained is set to: $(PRETRAINED)"
+	@for outcome in $(OUTCOMES); do \
+		for pipeline in $(PIPELINES); do \
+			mkdir -p models/results/$$outcome; \
+			"$(PYTHON_INTERPRETER)" $(PROJECT_DIRECTORY)/modeling/train.py \
+				--model-type cat \
+				--pipeline-type "$$pipeline" \
+				--labels-path ./data/processed/y_$$outcome.parquet \
+				--outcome "$$outcome" \
+				--pretrained "$(PRETRAINED)" \
+				--scoring "$(SCORING)" \
+				2>&1 | tee models/results/$$outcome/cat_$$pipeline$$( [ "$(PRETRAINED)" -eq 1 ] && echo "_prefit" ).txt; \
+		done; \
+	done
+
+train_all_models: train_logistic_regression train_random_forest train_xgboost train_catboost
 
 ################################################################################
 ############################## Model Evaluation ################################
@@ -286,7 +301,6 @@ eval_logistic_regression:
 		done; \
 	done
 
-# Loop through each outcome for Random Forest
 eval_random_forest:
 	@for outcome in $(OUTCOMES); do \
 		for pipeline in $(PIPELINES); do \
@@ -300,22 +314,34 @@ eval_random_forest:
 		done; \
 	done
 
-# Loop through each outcome for XGBoost
-eval_svm:
+eval_catboost:
 	@for outcome in $(OUTCOMES); do \
 		for pipeline in $(PIPELINES); do \
 			$(PYTHON_INTERPRETER) $(PROJECT_DIRECTORY)/modeling/evaluation.py \
-			--model-type svm \
+			--model-type cat \
 			--pipeline-type $$pipeline \
 			--features-path ./data/processed/X.parquet \
 			--labels-path ./data/processed/y.parquet \
 			--outcome $$outcome \
-			--scoring $(SCORING) 2>&1 | tee models/eval/$$outcome/svm_eval_$$pipeline.txt; \
+			--scoring $(SCORING) 2>&1 | tee models/eval/$$outcome/cat_eval_$$pipeline.txt; \
+		done; \
+	done
+
+eval_xgboost:
+	@for outcome in $(OUTCOMES); do \
+		for pipeline in $(PIPELINES); do \
+			$(PYTHON_INTERPRETER) $(PROJECT_DIRECTORY)/modeling/evaluation.py \
+			--model-type xgb \
+			--pipeline-type $$pipeline \
+			--features-path ./data/processed/X.parquet \
+			--labels-path ./data/processed/y.parquet \
+			--outcome $$outcome \
+			--scoring $(SCORING) 2>&1 | tee models/eval/$$outcome/xgb_eval_$$pipeline.txt; \
 		done; \
 	done
 
 
-eval_all_models: eval_logistic_regression eval_random_forest eval_svm 
+eval_all_models: eval_logistic_regression eval_random_forest eval_xgboost eval_catboost
 
 train_eval_pipeline: train_all_models eval_all_models
 
