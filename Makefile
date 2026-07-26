@@ -258,7 +258,8 @@ train_xgboost:
 			"$(PYTHON_INTERPRETER)" $(PROJECT_DIRECTORY)/modeling/train.py \
 				--model-type xgb \
 				--pipeline-type "$$pipeline" \
-				--labels-path ./data/processed/y_$$outcome.parquet \
+				--features-path ./data/processed/X.parquet \
+				--labels-path ./data/processed/y.parquet \
 				--outcome "$$outcome" \
 				--pretrained "$(PRETRAINED)" \
 				--scoring "$(SCORING)" \
@@ -274,7 +275,8 @@ train_catboost:
 			"$(PYTHON_INTERPRETER)" $(PROJECT_DIRECTORY)/modeling/train.py \
 				--model-type cat \
 				--pipeline-type "$$pipeline" \
-				--labels-path ./data/processed/y_$$outcome.parquet \
+				--features-path ./data/processed/X.parquet \
+				--labels-path ./data/processed/y.parquet \
 				--outcome "$$outcome" \
 				--pretrained "$(PRETRAINED)" \
 				--scoring "$(SCORING)" \
