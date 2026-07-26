@@ -10,6 +10,12 @@ CONDA_ENV_NAME = conda_circ_311
 MAKEFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROJECT_DIRECTORY := $(abspath $(MAKEFILE_DIR))
 
+RAW_DATA       ?= $(PROJECT_DIRECTORY)/data/raw/kidney_uae.xlsx
+PROCESSED_DATA ?= $(PROJECT_DIRECTORY)/data/processed/df.parquet
+DATA_GEN_SCRIPT = $(PROJECT_DIRECTORY)/preprocessing/data_gen.py
+CSV_BACKUP     ?= --no-csv-backup
+
+
 ############################## Training Globals ################################
 
 # Define variables for looping
@@ -171,6 +177,19 @@ create_folders:
 		mkdir -p models/results/$$outcome; \
 		mkdir -p models/eval/$$outcome; \
 	done
+
+.PHONY: data_gen
+data_gen: $(PROCESSED_DATA)
+
+$(PROCESSED_DATA): $(RAW_DATA) $(DATA_GEN_SCRIPT)
+	$(PYTHON_INTERPRETER) $(DATA_GEN_SCRIPT) \
+		--input-data-file $(RAW_DATA) \
+		--output-data-file $(PROCESSED_DATA) \
+		$(CSV_BACKUP)
+
+.PHONY: clean_data
+clean_data:
+	rm -f $(PROCESSED_DATA) $(basename $(PROCESSED_DATA)).csv
 
 ## Replace <your_project_dir> with actual path to your preprocessing script
 ## Replace <raw_input_filename> with the name of the raw input file
