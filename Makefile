@@ -317,6 +317,8 @@ eval_svm:
 
 eval_all_models: eval_logistic_regression eval_random_forest eval_svm 
 
+train_eval_pipeline: train_all_models eval_all_models
+
 ################################################################################
 ########## Preprocessing, Feature Generation, Training and Evaluation ##########
 ################################################################################
