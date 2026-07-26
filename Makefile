@@ -191,28 +191,25 @@ $(PROCESSED_DATA): $(RAW_DATA) $(DATA_GEN_SCRIPT)
 clean_data:
 	rm -f $(PROCESSED_DATA) $(basename $(PROCESSED_DATA)).csv
 
-## Replace <your_project_dir> with actual path to your preprocessing script
-## Replace <raw_input_filename> with the name of the raw input file
-## Replace <cleaned_output_filename> with the name of the cleaned output file
-.PHONY: data_prep_preprocessing_training
 data_prep_preprocessing_training:
 	$(PYTHON_INTERPRETER) $(PROJECT_DIRECTORY)/preprocessing/preprocessing.py \
-		--input-data-file ./data/raw/Laser_Circumcision_Excel_31.03.2024.xlsx \
-		--output-eda-file ./data/processed/circ_eda.parquet \
+		--input-data-file ./data/processed/df.parquet \
 		--output-data-file ./data/processed/df_sans_zero.parquet \
 		--stage training \
 		--data-path ./data/processed \
-	2>&1 | tee data/processed/preproccessing.txt
+	2>&1 | tee data/processed/preprocessing.txt
 
 .PHONY: feat_gen_training
 feat_gen_training:
+	@mkdir -p data/processed
 	$(PYTHON_INTERPRETER) $(PROJECT_DIRECTORY)/preprocessing/feat_gen.py \
-	--input-data-file ./data/processed/df_sans_zero.parquet \
-	--stage training \
-	--data-path ./data/processed
+		--input-data-file ./data/processed/df_sans_zero.parquet \
+		--stage training \
+		--data-path ./data/processed \
+	2>&1 | tee data/processed/feat_gen.txt
 
 
-preproc_pipeline: data_prep_preprocessing_training feat_gen_training
+preproc_pipeline: data_gen data_prep_preprocessing_training feat_gen_training
 
 ################################################################################
 ################################# Training #####################################

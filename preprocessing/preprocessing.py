@@ -36,7 +36,7 @@ app = typer.Typer()
 @app.command()
 def main(
     input_data_file: str = "./data/processed/df.parquet",
-    output_data_file: str = "./data/processed/df_sans_zero_missing.parquet",
+    output_data_file: str = "./data/processed/df_sans_zero.parquet",
     stage: str = "training",
     data_path: str = "./data/processed",
 ):
@@ -58,7 +58,7 @@ def main(
     if df.index.name != var_index:
         try:
             df.set_index(var_index, inplace=True)
-            print(f"Index set to '{var_index}'.")
+            print(f"\nIndex set to '{var_index}'.")
         except KeyError:
             print(
                 f"Warning: '{var_index}' not found in columns - "
@@ -299,7 +299,7 @@ def main(
     # DataFrame. It helps identify rows with a high level of incompleteness, which
     # may be useful for filtering, imputation strategies, or downstream analysis.
     #
-    # A new column is added to `df_sans_zero_missing` where each value represents
+    # A new column is added to `df_sans_zero` where each value represents
     # the percentage of columns that are missing for that row.
     ############################################################################
 
