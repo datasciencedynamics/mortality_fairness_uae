@@ -60,4 +60,4 @@ shap_artifacts_data = "./mlruns/explainer"
 ################################################################################
 ############################### Target Outcome #################################
 
-target_outcome = ["outcome", "time(months)"]
+target_outcome = ["outcome", "time_months"]

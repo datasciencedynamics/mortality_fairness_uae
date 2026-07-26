@@ -19,8 +19,8 @@ CSV_BACKUP     ?= --no-csv-backup
 ############################## Training Globals ################################
 
 # Define variables for looping
-OUTCOMES = Bleeding_Edema_Outcome
-PIPELINES = orig smote over 
+OUTCOMES = outcome	
+PIPELINES = orig smote under orig_rfe smote_rfe under_rfe
 # PIPELINES = smote 
 SCORING = average_precision
 PRETRAINED ?= 0  # 0 if you want to train the models, 1 if calibrate pretrained
@@ -28,8 +28,8 @@ PRETRAINED ?= 0  # 0 if you want to train the models, 1 if calibrate pretrained
 ############################# Production Globals ###############################
 
 # Model outcome variable used in production 
-EXPLAN_OUTCOME = Bleeding_Edema_Outcome # explainer outcome variable
-PROD_OUTCOME = Bleeding_Edema_Outcome # production outcome variable
+EXPLAN_OUTCOME = outcome # explainer outcome variable
+PROD_OUTCOME = outcome # production outcome variable
 
 
 # ------------------------------------------------------------------------------
@@ -225,7 +225,7 @@ train_logistic_regression:
 				--model-type lr \
 				--pipeline-type "$$pipeline" \
 				--features-path ./data/processed/X.parquet \
-				--labels-path ./data/processed/y_$$outcome.parquet \
+				--labels-path ./data/processed/y.parquet \
 				--outcome "$$outcome" \
 				--pretrained "$(PRETRAINED)" \
 				--scoring "$(SCORING)" \
@@ -242,7 +242,7 @@ train_random_forest:
 				--model-type rf \
 				--pipeline-type "$$pipeline" \
 				--features-path ./data/processed/X.parquet \
-				--labels-path ./data/processed/y_$$outcome.parquet \
+				--labels-path ./data/processed/y.parquet \
 				--outcome "$$outcome" \
 				--pretrained "$(PRETRAINED)" \
 				--scoring "$(SCORING)" \
@@ -259,7 +259,7 @@ train_svm:
 				--model-type svm \
 				--pipeline-type "$$pipeline" \
 				--features-path ./data/processed/X.parquet \
-				--labels-path ./data/processed/y_$$outcome.parquet \
+				--labels-path ./data/processed/y.parquet \
 				--outcome "$$outcome" \
 				--pretrained "$(PRETRAINED)" \
 				--scoring "$(SCORING)" \
@@ -280,7 +280,7 @@ eval_logistic_regression:
 			--model-type lr \
 			--pipeline-type $$pipeline \
 			--features-path ./data/processed/X.parquet \
-			--labels-path ./data/processed/y_$$outcome.parquet \
+			--labels-path ./data/processed/y.parquet \
 			--outcome $$outcome \
 			--scoring $(SCORING) 2>&1 | tee models/eval/$$outcome/lr_eval_$$pipeline.txt; \
 		done; \
@@ -294,7 +294,7 @@ eval_random_forest:
 			--model-type rf \
 			--pipeline-type $$pipeline \
 			--features-path ./data/processed/X.parquet \
-			--labels-path ./data/processed/y_$$outcome.parquet \
+			--labels-path ./data/processed/y.parquet \
 			--outcome $$outcome \
 			--scoring $(SCORING) 2>&1 | tee models/eval/$$outcome/rf_eval_$$pipeline.txt; \
 		done; \
@@ -308,7 +308,7 @@ eval_svm:
 			--model-type svm \
 			--pipeline-type $$pipeline \
 			--features-path ./data/processed/X.parquet \
-			--labels-path ./data/processed/y_$$outcome.parquet \
+			--labels-path ./data/processed/y.parquet \
 			--outcome $$outcome \
 			--scoring $(SCORING) 2>&1 | tee models/eval/$$outcome/svm_eval_$$pipeline.txt; \
 		done; \
