@@ -155,27 +155,19 @@ pipelines = {
 # Define the hyperparameters for Logistic Regression
 lr_name = "lr"
 
-# lr_penalties = ["elasticnet"]
-# lr_penalties = ["l1"]
-lr_penalties = ["l2"]
-lr_Cs = np.logspace(-4, 0, 10)
-l1_ratio = np.linspace(0, 1, 10)
+lr_Cs = np.logspace(-5, 0, 5)
 
 tuned_parameters_lr = [
     {
-        "lr__penalty": lr_penalties,
         "lr__C": lr_Cs,
-        # "lr__l1_ratio": l1_ratio,
     }
 ]
 
 lr = LogisticRegression(
     class_weight="balanced",
     random_state=rstate,
-    n_jobs=-2,
-    # solver="saga",
-    # solver="liblinear",
     solver="lbfgs",
+    max_iter=1000,
 )
 
 lr_definition = {
@@ -183,11 +175,9 @@ lr_definition = {
     "estimator_name": lr_name,
     "tuned_parameters": tuned_parameters_lr,
     "randomized_grid": True,
-    "n_iter": 2,
+    "n_iter": 5,
     "early": False,
 }
-
-
 ################################################################################
 ########################## Random Forest Classifier ############################
 ################################################################################
@@ -195,8 +185,8 @@ lr_definition = {
 # Define the hyperparameters for Random Forest
 rf_name = "rf"
 
-rf_n_estimators = [100, 200, 300]
-rf_max_depths = [None, 5, 10]
+rf_n_estimators = [100, 200, 300, 400, 500]
+rf_max_depths = [None, 5, 10, 15, 20]
 rf_criterions = ["gini", "entropy"]
 rf_parameters = [
     {
@@ -217,7 +207,7 @@ rf_definition = {
     "estimator_name": rf_name,
     "tuned_parameters": rf_parameters,
     "randomized_grid": True,
-    "n_iter": 1,
+    "n_iter": 30,
     "early": False,
 }
 
@@ -239,13 +229,13 @@ xgb = XGBClassifier(
 # Define the hyperparameters for XGBoost
 xgb_learning_rates = [0.01]  # Learning rate or eta
 xgb_n_estimators = [10000]  # Number of trees
-xgb_max_depths = [3, 5, 7]  # Maximum depth of the trees
+xgb_max_depths = [2, 3, 4, 5]  # Maximum depth of the trees
 xgb_subsamples = [0.8, 1.0]  # Subsample ratio of the training instances
 xgb_colsample_bytree = [0.8, 1.0]
 xgb_alpha = [0, 0.1, 1, 10]  # L1 regularization (alpha)
 xgb_lambda = [0, 0.1, 10, 100]  # L2 regularization (lambda)
 xgb_eval_metric = ["logloss"]  # check out "aucpr"
-xgb_early_stopping_rounds = [3]
+xgb_early_stopping_rounds = [10]
 xgb_verbose = [0]
 # Subsample ratio of columns when constructing each tree
 
@@ -270,7 +260,7 @@ xgb_definition = {
     "estimator_name": xgb_name,
     "tuned_parameters": xgb_parameters,
     "randomized_grid": True,
-    "n_iter": 1,
+    "n_iter": 30,
     "early": True,
 }
 
@@ -292,7 +282,7 @@ cat_learning_rates = [0.01]  # Learning rate
 cat_l2_leaf_regs = [3, 10, 100]  # L2 regularization
 cat_bagging_temperatures = [0, 0.5, 1]  # Bagging temperature
 cat_n_estimators = [10000]  # Number of trees
-cat_early_stopping_rounds = [3]  # Early stopping rounds
+cat_early_stopping_rounds = [10]  # Early stopping rounds
 cat_random_strengths = [1, 10]  # Random strength for feature randomness
 cat_verbose = [0]  # Verbosity level
 
@@ -315,7 +305,7 @@ cat_definition = {
     "estimator_name": cat_name,
     "tuned_parameters": cat_parameters,
     "randomized_grid": True,
-    "n_iter": 1,
+    "n_iter": 30,
     "early": True,
 }
 
