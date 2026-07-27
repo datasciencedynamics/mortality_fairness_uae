@@ -114,6 +114,24 @@ preprocessor = ColumnTransformer(
     # verbose_feature_names_out=False,
 )
 
+
+SEX_COL = "sex"
+
+# Ablation variant: sex is retained in X (needed for stratification and for
+# the fairness audit) but excluded from the transformer, so ColumnTransformer's
+# remainder="drop" prevents it from reaching the estimator.
+numerical_cols_no_sex = [c for c in numerical_cols if c != SEX_COL]
+
+preprocessor_no_sex = ColumnTransformer(
+    transformers=[
+        ("num", numerical_transformer, numerical_cols_no_sex),
+    ],
+)
+
+pipeline_scale_imp_no_sex = [
+    ("Preprocessor", preprocessor_no_sex),
+]
+
 ################################################################################
 ################################ Pipelines #####################################
 ################################################################################
@@ -136,6 +154,11 @@ pipelines = {
     "under": {
         "pipeline": pipeline_scale_imp,
         "sampler": RandomUnderSampler(random_state=rstate),
+        "feature_selection": False,
+    },
+    "orig_no_sex": {
+        "pipeline": pipeline_scale_imp_no_sex,
+        "sampler": None,
         "feature_selection": False,
     },
 }

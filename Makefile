@@ -284,6 +284,8 @@ train_catboost:
 		done; \
 	done
 
+
+
 train_all_models: train_logistic_regression train_random_forest train_xgboost train_catboost
 
 ################################################################################
@@ -316,19 +318,6 @@ eval_random_forest:
 		done; \
 	done
 
-eval_catboost:
-	@for outcome in $(OUTCOMES); do \
-		for pipeline in $(PIPELINES); do \
-			$(PYTHON_INTERPRETER) $(PROJECT_DIRECTORY)/modeling/evaluation.py \
-			--model-type cat \
-			--pipeline-type $$pipeline \
-			--features-path ./data/processed/X.parquet \
-			--labels-path ./data/processed/y.parquet \
-			--outcome $$outcome \
-			--scoring $(SCORING) 2>&1 | tee models/eval/$$outcome/cat_eval_$$pipeline.txt; \
-		done; \
-	done
-
 eval_xgboost:
 	@for outcome in $(OUTCOMES); do \
 		for pipeline in $(PIPELINES); do \
@@ -342,10 +331,26 @@ eval_xgboost:
 		done; \
 	done
 
+eval_catboost:
+	@for outcome in $(OUTCOMES); do \
+		for pipeline in $(PIPELINES); do \
+			$(PYTHON_INTERPRETER) $(PROJECT_DIRECTORY)/modeling/evaluation.py \
+			--model-type cat \
+			--pipeline-type $$pipeline \
+			--features-path ./data/processed/X.parquet \
+			--labels-path ./data/processed/y.parquet \
+			--outcome $$outcome \
+			--scoring $(SCORING) 2>&1 | tee models/eval/$$outcome/cat_eval_$$pipeline.txt; \
+		done; \
+	done
+
+cat_no_sex:
+	$(MAKE) train_catboost PIPELINES=orig_no_sex
+	$(MAKE) eval_catboost PIPELINES=orig_no_sex
 
 eval_all_models: eval_logistic_regression eval_random_forest eval_xgboost eval_catboost
 
-train_eval_pipeline: train_all_models eval_all_models
+train_eval_pipeline: train_all_models eval_all_models cat_no_sex
 
 ################################################################################
 ########## Preprocessing, Feature Generation, Training and Evaluation ##########

@@ -15,6 +15,7 @@ from core.config import (
     rstate,
     pipelines,
     numerical_cols,
+    numerical_cols_no_sex,
     categorical_cols,
 )
 
@@ -74,6 +75,15 @@ def main(
     print("Sampler", sampler)
 
     ################################################################################
+    # Step 4a. Model name suffix for the sex-ablation variant
+    ################################################################################
+    # The ablated model registers under a distinct model_name so it forms its own
+    # group in the registry rather than competing with the primary model when
+    # selecting the best run per algorithm.
+
+    name_suffix = "_no_sex" if pipeline_type == "orig_no_sex" else ""
+
+    ################################################################################
     # Step 5. Clean up pipeline
     # Step 5a. Clean up tuned_parameters by removing feature selection keys if
     # RFE isn't in the pipeline
@@ -82,10 +92,16 @@ def main(
 
     # Step 5b. Adjust preproc. pipe. to skip imputer and scaler for 'rf', 'xgb', 'cat'
 
+    num_cols = (
+        numerical_cols_no_sex
+        if pipeline_type.endswith("_no_sex")
+        else numerical_cols
+    )
+
     pipeline_steps = adjust_preprocessing_pipeline(
         model_type,
         pipeline_steps,
-        numerical_cols,
+        num_cols,
         categorical_cols,
         sampler=sampler,
     )
@@ -114,7 +130,7 @@ def main(
         model = mlflow_load_model(
             experiment_name=f"{outcome}_model",
             run_name=f"{estimator_name}_{pipeline_type}_training",
-            model_name=f"{estimator_name}_{outcome}",
+            model_name=f"{estimator_name}_{outcome}{name_suffix}",
         )
 
     else:
@@ -221,7 +237,7 @@ def main(
         mlflow_log_parameters_model(
             experiment_name=f"{outcome}_model",
             run_name=f"{estimator_name}_{pipeline_type}_training",
-            model_name=f"{estimator_name}_{outcome}",
+            model_name=f"{estimator_name}_{outcome}{name_suffix}",
             model=model,
         )
 
@@ -233,7 +249,7 @@ def main(
             outcome=outcome,
             experiment_name=f"{outcome}_model",
             run_name=f"{estimator_name}_{pipeline_type}_training",
-            model_name=f"{estimator_name}_{outcome}",
+            model_name=f"{estimator_name}_{outcome}{name_suffix}",
             model=model,
             hyperparam_dict=model.best_params_per_score[scoring],
         )

@@ -50,8 +50,12 @@ def main(
 
     estimator_name = model_definitions[model_type]["estimator_name"]
 
+    # Must match train.py: the sex-ablation variant registers under a distinct
+    # model_name so it forms its own group in the registry.
+    name_suffix = "_no_sex" if pipeline_type == "orig_no_sex" else ""
+
     print(f"{estimator_name}_{pipeline_type}_training")
-    print(f"{estimator_name}_{outcome}")
+    print(f"{estimator_name}_{outcome}{name_suffix}")
 
     ################################################################################
     # STEP 3: Load Pre-Trained Model from MLflow
@@ -60,7 +64,7 @@ def main(
     model = mlflow_load_model(
         experiment_name=f"{outcome}_model",
         run_name=f"{estimator_name}_{pipeline_type}_training",
-        model_name=f"{estimator_name}_{outcome}",
+        model_name=f"{estimator_name}_{outcome}{name_suffix}",
     )
 
     # Print model threshold before optimization
@@ -73,7 +77,7 @@ def main(
     X = pd.read_parquet(features_path)
     y = pd.read_parquet(labels_path)
     y = y[target_outcome[0]].squeeze()  # coerce into a series
-    
+
     ################################################################################
     # STEP 5: Split Data into Train, Validation, and Test Sets
     ################################################################################
@@ -122,7 +126,7 @@ def main(
     mlflow_log_parameters_model(
         experiment_name=f"{outcome}_model",
         run_name=f"{estimator_name}_{pipeline_type}_training",
-        model_name=f"{estimator_name}_{outcome}",
+        model_name=f"{estimator_name}_{outcome}{name_suffix}",
         model=model,
     )
 
