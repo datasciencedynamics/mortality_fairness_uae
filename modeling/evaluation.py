@@ -2,10 +2,6 @@ from pathlib import Path
 import typer
 from loguru import logger
 import pandas as pd
-import numpy as np
-
-# Import necessary modules from custom libraries
-from model_tuner import find_optimal_threshold_beta, find_optimal_threshold_youden
 
 # Import functions and constants
 from core.functions import (
@@ -21,8 +17,6 @@ from core.constants import target_outcome
 from core.config import (
     PROCESSED_DATA_DIR,
     model_definitions,
-    target_precision,
-    threshold_target_metric,
 )
 
 app = typer.Typer()
@@ -87,40 +81,7 @@ def main(
     X_test, y_test = model.get_test_data(X, y)
 
     ################################################################################
-    # STEP 6: Find the Optimal Threshold Based on Target Precision
-    # (defined in config.py under `target_precision`)
-    ################################################################################
-
-    try:
-        print(f"\n Best Threshold and Beta For {outcome}: \n")
-
-        if threshold_target_metric == "youden":
-            threshold, beta = find_optimal_threshold_youden(
-                y_valid,
-                model.predict_proba(X_valid)[:, 1],
-            )
-        else:
-            threshold, beta = find_optimal_threshold_beta(
-                y_valid,
-                model.predict_proba(X_valid)[:, 1],
-                target_metric=threshold_target_metric,
-                target_score=target_precision,
-                beta_value_range=np.linspace(0.01, 4, 40),
-                delta=0.01,
-            )
-
-        model.threshold[scoring] = threshold
-        model.beta = beta
-        print(f"Optimal Threshold: {threshold}, Beta: {beta}")
-
-    except Exception as e:
-        print(
-            f"Could not find optimal threshold for the {threshold_target_metric} of {target_precision}"
-        )
-        print(e)
-
-    ################################################################################
-    # STEP 7: Log Updated Model with Optimized Threshold
+    # STEP 6: Log Updated Model with Optimized Threshold
     ################################################################################
 
     mlflow_log_parameters_model(
@@ -134,7 +95,7 @@ def main(
     print(f"Model Threshold After Threshold Optimization: {model.threshold}")
 
     ################################################################################
-    # STEP 8: Compute and Evaluate Model Performance Metrics
+    # STEP 7: Compute and Evaluate Model Performance Metrics
     ################################################################################
 
     all_inputs = {
@@ -151,7 +112,7 @@ def main(
     print(metrics)
 
     ################################################################################
-    # STEP 9: Generate and Save Model Evaluation Plots
+    # STEP 8: Generate and Save Model Evaluation Plots
     ################################################################################
 
     # Generate evaluation plots
@@ -163,7 +124,7 @@ def main(
     )
 
     ################################################################################
-    # STEP 10: Log Experiment Details to MLflow
+    # STEP 9: Log Experiment Details to MLflow
     ################################################################################
 
     log_mlflow_metrics(
@@ -174,7 +135,7 @@ def main(
     )
 
     ################################################################################
-    # STEP 11: Completion Message
+    # STEP 10: Completion Message
     ################################################################################
 
     logger.success("Modeling evaluation complete.")

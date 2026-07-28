@@ -202,7 +202,7 @@ def main(
     # model.calibration_method = "isotonic"
 
     if model.calibrate:
-        model.calibrateModel(X, y, score=scoring)
+        model.calibrateModel(X, y, score=scoring, f1_beta_tune=True)
 
     ################################################################################
     # Step 12. See Results in Terminal and Store Model in MLFlow
