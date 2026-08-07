@@ -2,11 +2,11 @@
 # ------------------------------------------------------------------------------
 # GLOBALS
 # ------------------------------------------------------------------------------
-PROJECT_NAME = circ_milan
+PROJECT_NAME = kidney_uae
 PYTHON_VERSION = 3.11
 PYTHON_INTERPRETER = python
-VENV_DIR = venv_circ_311
-CONDA_ENV_NAME = conda_circ_311
+VENV_DIR = kidney_venv
+CONDA_ENV_NAME = conda_kidney
 MAKEFILE_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 PROJECT_DIRECTORY := $(abspath $(MAKEFILE_DIR))
 
