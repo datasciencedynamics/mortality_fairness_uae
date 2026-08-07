@@ -1,3 +1,7 @@
+<p align="left">
+  <img src="https://raw.githubusercontent.com/datasciencedynamics/datasciencedynamics.github.io/refs/heads/main/data_science_dynamics_logo.svg" alt="Data Science Dynamics" width="250"/>
+</p>
+
 # Kidney Function and Mortality in the United Arab Emirates
 
 Machine learning pipeline for all-cause mortality prediction and sex-stratified
