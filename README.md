@@ -8,7 +8,7 @@
       <p>A fairness auditing pipeline for mortality prediction models trained on a United Arab Emirates patient cohort. The project evaluates subgroup performance across demographic strata using bootstrapped disparity metrics, calibration curves, and threshold sensitivity analysis, with the <code>equiboots</code> library providing the fairness assessment layer.</p>
     </td>
     <td valign="middle" width="300" align="center">
-      <img src="https://raw.githubusercontent.com/datasciencedynamics/uae_mortality_fairness/refs/heads/main/assets/uae-kidney-logo.svg" alt="UAE Mortality Fairness Audit" width="300"/>
+      <img src="https://raw.githubusercontent.com/datasciencedynamics/kidney_uae/refs/heads/main/assets/uae-kidney-logo.svg" alt="UAE Mortality Fairness Audit" width="300"/>
     </td>
   </tr>
 </table>
