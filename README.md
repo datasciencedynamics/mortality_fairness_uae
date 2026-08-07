@@ -1,6 +1,17 @@
 <p align="left">
   <img src="https://raw.githubusercontent.com/datasciencedynamics/datasciencedynamics.github.io/refs/heads/main/data_science_dynamics_logo.svg" alt="Data Science Dynamics" width="250"/>
 </p>
+<table border="0" cellspacing="0" cellpadding="0">
+  <tr>
+    <td valign="middle">
+      <h1>UAE Mortality Fairness Audit</h1>
+      <p>A fairness auditing pipeline for mortality prediction models trained on a United Arab Emirates patient cohort. The project evaluates subgroup performance across demographic strata using bootstrapped disparity metrics, calibration curves, and threshold sensitivity analysis, with the <code>equiboots</code> library providing the fairness assessment layer.</p>
+    </td>
+    <td valign="middle" width="300" align="center">
+      <img src="https://raw.githubusercontent.com/datasciencedynamics/uae_mortality_fairness/refs/heads/main/assets/uae-kidney-logo.svg" alt="UAE Mortality Fairness Audit" width="300"/>
+    </td>
+  </tr>
+</table>
 
 # Kidney Function and Mortality in the United Arab Emirates
 
