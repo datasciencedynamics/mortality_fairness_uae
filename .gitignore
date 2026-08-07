@@ -158,4 +158,4 @@ docs/.doctrees/
 
 /.quarto/
 /lib
-**/*.quarto_ipynb
+**/*.quarto_ipynb.data/
