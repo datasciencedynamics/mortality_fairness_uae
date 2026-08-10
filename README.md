@@ -26,6 +26,16 @@ sex from the feature set entirely.
 
 ---
 
+## Setup
+
+After cloning, run once:
+
+    pip install -r requirements-dev.txt
+    git config core.hooksPath .githooks
+
+This strips notebook outputs automatically on commit. CI rejects
+notebooks with outputs, so skipping this means your PR will fail.
+
 ## Data
 
 | Item | Value |
