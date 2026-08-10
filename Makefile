@@ -3,7 +3,7 @@
 # GLOBALS
 # ------------------------------------------------------------------------------
 PROJECT_NAME = kidney_uae
-PYTHON_VERSION = 3.11
+PYTHON_VERSION = 3.12
 PYTHON_INTERPRETER = python
 VENV_DIR = kidney_venv
 CONDA_ENV_NAME = conda_kidney
