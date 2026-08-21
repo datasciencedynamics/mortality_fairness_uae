@@ -1,5 +1,5 @@
 black==26.5.1
-# equiboots==0.0.1a13
+equiboots==0.0.1a14
 eda_toolkit==0.0.30
 -e .
 lifelines==0.30.3
