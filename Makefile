@@ -407,6 +407,27 @@ model_explanations_inference:
 	done
 
 ################################################################################
+################################################################################
+
+DID_SPLITS ?= 20
+DID_METRIC ?= valid Average Precision
+
+## Stability of the sex-ablation AUC gap across repeated splits
+.PHONY: did_stability
+did_stability:
+	@for outcome in $(OUTCOMES); do \
+		mkdir -p models/eval/$$outcome; \
+		$(PYTHON_INTERPRETER) $(PROJECT_DIRECTORY)/modeling/did_stability.py \
+			--features-path ./data/processed/X.parquet \
+			--labels-path ./data/processed/y.parquet \
+			--outcome $$outcome \
+			--metric-name "$(DID_METRIC)" \
+			--n-splits $(DID_SPLITS) \
+			--out models/eval/$$outcome/did_stability.csv \
+			2>&1 | tee models/eval/$$outcome/did_stability.txt; \
+	done
+
+################################################################################
 ################################# Production ###################################
 ############################### Model Predict ##################################
 ################################################################################
