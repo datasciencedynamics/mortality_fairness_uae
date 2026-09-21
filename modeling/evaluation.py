@@ -61,8 +61,8 @@ def main(
         model_name=f"{estimator_name}_{outcome}{name_suffix}",
     )
 
-    # Print model threshold before optimization
-    print(f"Model Threshold Before Threshold Optimization: {model.threshold}")
+    # Print model thresholdon
+    print(f"Model Threshold: {model.threshold}")
 
     ################################################################################
     # STEP 4: Load Processed Data (Features & Labels)
@@ -81,7 +81,7 @@ def main(
     X_test, y_test = model.get_test_data(X, y)
 
     ################################################################################
-    # STEP 6: Log Updated Model with Optimized Threshold
+    # STEP 6: Log Updated Model
     ################################################################################
 
     mlflow_log_parameters_model(
@@ -90,9 +90,6 @@ def main(
         model_name=f"{estimator_name}_{outcome}{name_suffix}",
         model=model,
     )
-
-    # Print model threshold after optimization
-    print(f"Model Threshold After Threshold Optimization: {model.threshold}")
 
     ################################################################################
     # STEP 7: Compute and Evaluate Model Performance Metrics

@@ -21,7 +21,6 @@ CSV_BACKUP     ?= --no-csv-backup
 # Define variables for looping
 OUTCOMES = outcome	
 PIPELINES = orig 
-# PIPELINES = smote 
 SCORING = average_precision
 PRETRAINED ?= 0  # 0 if you want to train the models, 1 if calibrate pretrained
 
@@ -348,7 +347,7 @@ cat_no_sex:
 	$(MAKE) train_catboost PIPELINES=orig_no_sex
 	$(MAKE) eval_catboost PIPELINES=orig_no_sex
 
-eval_all_models: eval_logistic_regression eval_random_forest eval_xgboost eval_catboost
+eval_all_models: eval_logistic_regression eval_random_forest eval_xgboost eval_catboost 
 
 train_eval_pipeline: train_all_models eval_all_models cat_no_sex
 
@@ -359,7 +358,7 @@ train_eval_pipeline: train_all_models eval_all_models cat_no_sex
 # This pipeline is to run consecutively the full preprocessing, training, and 
 # evaluation pipeline in one command
 
-preproc_train_eval: preproc_pipeline train_all_models eval_all_models
+preproc_train_eval: preproc_pipeline train_all_models eval_all_models cat_no_sex
 
 
 ################################################################################

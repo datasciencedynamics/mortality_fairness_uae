@@ -101,10 +101,15 @@ kidney_uae/
 │   ├── preprocessing.py         # cleaning, zero-handling
 │   └── feat_gen.py              # feature construction -> X.parquet, y.parquet
 ├── notebooks/
-│   ├── Kidney_UAE_Preprocessing.ipynb
-│   ├── performance_assessment.ipynb
-│   ├── bias_fairness.ipynb
-│   └── bias_fairness_sex_ablated.ipynb
+│   ├── Kidney_UAE_EDA.ipynb                        # exploratory data analysis
+│   ├── Additional_EDA.ipynb                        # supplementary EDA
+│   ├── table_1.ipynb                               # cohort characteristics table
+│   ├── performance_assessment.ipynb                # model performance + calibration
+│   ├── shap_analysis.ipynb                         # SHAP feature attributions
+│   ├── cph_sensitivity_analysis.ipynb              # Cox PH sensitivity analysis
+│   ├── bias_fairness.ipynb                         # fairness audit, primary model
+│   ├── bias_fairness_sex_ablated.ipynb             # fairness audit, sex removed
+│   └── bias_fairness_ablation_comparison.ipynb     # primary vs ablated comparison
 ├── models/
 │   ├── results/<outcome>/       # training logs per model + pipeline
 │   └── eval/<outcome>/          # evaluation logs
